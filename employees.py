@@ -79,6 +79,7 @@ if __name__ == "__main__":
     # print(positionsets)
     # print(degreesets)
     X_train, X_test, y_train, y_test = train_test_split(candidates, labelset, random_state=int(time.time()))
+    print(len(X_test),len(y_test))
     # X_train[0].printInfo()
     for i in range(len(X_train)):
         for j in range(len(positionsets)):
@@ -90,39 +91,89 @@ if __name__ == "__main__":
                 for index in range(len(degreesets)):
                     if X_train[i].degree == degreesets[index][0]:
                         degreesets[index][j+1]+=1
-    id=int(time.time())%len(X_train)
-    X_train[id].printInfo()
-    degree_pre=0;
-    targetpersion=X_train[id]
-    for i in range(len(degreesets)):
-        if degreesets[i][0]==targetpersion.degree:
-            degree_pre=i
-            break
-    print(degree_pre)
-    dev_pre=0
-    manager_pre=0
-    qa_pre=0
-    for i in range(len(targetpersion.skills)):
-        for j in range(len(skillsets)):
-            if(targetpersion.skills[i]==skillsets[j][0]):
-                max=skillsets[j][1]
-                maxpos=1
-                if skillsets[j][2]>max:
-                    max=skillsets[j][2]
-                    maxpos=2
-                if skillsets[j][3]>max:
-                    max=skillsets[j][3]
-                    maxpos=3
-                if maxpos==1:
-                    dev_pre+=1
-                if maxpos==2:
-                    manager_pre+=1
-                if maxpos==3:
-                    qa_pre+=1
-    x=[dev_pre,manager_pre,qa_pre]
-    predict=np.where(x==np.max(x))
-    print(predict)
-    print(y_train[id])
-    # print(positionsets)
-    # print(degreesets)
-    print(skillsets)
+    dev_predict=0
+    dev_count=0
+    dev_fn=0
+    manager_predict=0
+    manager_count=0
+    manager_fn=0
+    qa_predict=0
+    qa_count=0
+    qa_fn=0
+    for k in range(len(X_test)):
+        # id=int(time.time())%len(X_train)
+        # X_train[id].printInfo()
+        degree_pre=0;
+        targetpersion=X_test[k]
+        for i in range(len(degreesets)):
+            if degreesets[i][0]==targetpersion.degree:
+                degree_pre=i
+                break
+        # print(degree_pre)
+        dev_pre=0
+        manager_pre=0
+        qa_pre=0
+        for i in range(len(targetpersion.skills)):
+            for j in range(len(skillsets)):
+                if(targetpersion.skills[i]==skillsets[j][0]):
+                    max=skillsets[j][1]
+                    maxpos=1
+                    if skillsets[j][2]>max:
+                        max=skillsets[j][2]
+                        maxpos=2
+                    if skillsets[j][3]>max:
+                        max=skillsets[j][3]
+                        maxpos=3
+                    if maxpos==1:
+                        dev_pre+=1
+                    if maxpos==2:
+                        manager_pre+=1
+                    if maxpos==3:
+                        qa_pre+=1
+        x=[dev_pre,manager_pre,qa_pre]
+        predict=np.where(x==np.max(x))
+        # print("predict=",predict[0][0])
+        result=0
+        if predict[0][0]==0:
+            result='dev'
+        if predict[0][0]==1:
+            result='manager'
+        if predict[0][0]==2:
+            result='qa'
+        print(result, y_test[k])
+        if y_test[k]=='dev':
+            if y_test[k]!=result:
+                dev_fn+=1
+        if y_test[k]=='manager':
+            if y_test[k]!=result:
+                manager_fn+=1
+        if y_test[k]=='qa':
+            if y_test[k]!=result:
+                qa_fn+=1
+        if result=='dev':
+            dev_predict+=1
+            if result==y_test[k]:
+                dev_count+=1
+        if result=='manager':
+            manager_predict+=1
+            if result==y_test[k]:
+                manager_count+=1
+        if result=='qa':
+            qa_predict+=1
+            if result==y_test[k]:
+                qa_count+=1
+    dev_precision=dev_count/dev_predict
+    dev_recall=dev_count/(dev_count+dev_fn)
+    dev_F1score=2*(dev_precision*dev_recall)/(dev_precision+dev_recall)
+    print("dev:",dev_precision,dev_recall,dev_F1score)
+    manager_precision = manager_count / manager_predict
+    manager_recall = manager_count / (manager_count + manager_fn)
+    manager_F1score = 2 * (manager_precision * manager_recall) / (manager_precision + manager_recall)
+    print("manager:",manager_precision,manager_recall,manager_F1score)
+    if qa_predict!=0:
+        qa_precision = qa_count / qa_predict
+        qa_recall = qa_count / (qa_count + qa_fn)
+        qa_F1score = 2 * (qa_precision * qa_recall) / (qa_precision + qa_recall)
+        print("qa:",qa_precision,qa_recall,qa_F1score)
+
+    # print(count/len(X_test))
